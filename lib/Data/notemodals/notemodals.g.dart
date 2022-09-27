@@ -7,14 +7,14 @@ part of 'notemodals.dart';
 // **************************************************************************
 
 Notemodals _$NotemodalsFromJson(Map<String, dynamic> json) => Notemodals(
-      id: json['id'] as String?,
+      id: json['_id'] as String?,
       title: json['title'] as String?,
-      content: json['error'] as String?,
+      content: json['content'] as String?,
     );
 
 Map<String, dynamic> _$NotemodalsToJson(Notemodals instance) =>
     <String, dynamic>{
-      'id': instance.id,
+      '_id': instance.id,
       'title': instance.title,
       'content': instance.content,
     };

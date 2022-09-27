@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/src/widgets/container.dart';
 import 'package:flutter/src/widgets/framework.dart';
+import 'package:note_app/Data/data.dart';
+import 'package:note_app/Data/notemodals/notemodals.dart';
 
 enum ActionType {
   addNote,
@@ -20,6 +22,7 @@ class ScreenAddnote extends StatelessWidget {
         onPressed: () {
           switch (type) {
             case ActionType.addNote:
+              saveNote();
               break;
             case ActionType.editNote:
               break;
@@ -34,6 +37,9 @@ class ScreenAddnote extends StatelessWidget {
           style: TextStyle(color: Colors.white),
         ),
       );
+
+  final _titleController = TextEditingController();
+  final _contentController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -50,6 +56,7 @@ class ScreenAddnote extends StatelessWidget {
           child: Column(
             children: [
               TextFormField(
+                controller: _titleController,
                 decoration: InputDecoration(
                   border: OutlineInputBorder(),
                   hintText: 'Title',
@@ -57,6 +64,7 @@ class ScreenAddnote extends StatelessWidget {
               ),
               SizedBox(height: 20),
               TextFormField(
+                controller: _contentController,
                 maxLines: 4,
                 maxLength: 100,
                 decoration: InputDecoration(
@@ -69,5 +77,20 @@ class ScreenAddnote extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> saveNote() async {
+    final title = _titleController.text;
+    final content = _contentController.text;
+
+    //constructor
+    final _newNote = Notemodals.create(
+      id: DateTime.now().microsecondsSinceEpoch.toString(),
+      title: title,
+      content: content,
+    );
+
+    //server sending
+    NoteDB().createNote(_newNote);
   }
 }

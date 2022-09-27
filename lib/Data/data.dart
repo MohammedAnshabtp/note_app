@@ -3,6 +3,8 @@ import 'package:note_app/Data/notemodals/notemodals.dart';
 import 'package:dio/dio.dart';
 import 'package:note_app/Data/url.dart';
 
+import 'get_all_notes/get_all_notes.dart';
+
 //functionality
 abstract class ApiCalls {
   Future<Notemodals?> createNote(Notemodals value);
@@ -31,8 +33,12 @@ class NoteDB extends ApiCalls {
 
   @override
   Future<List<Notemodals>> getAllNotes() async {
-    // TODO: implement getAllNotes
-    throw UnimplementedError();
+    final _result = await dio.get<GetAllNotes>(url.baseUrl + url.getAllNotes);
+    if (_result.data == null) {
+      return [];
+    } else {
+      return _result.data!.data;
+    }
   }
 
   @override
