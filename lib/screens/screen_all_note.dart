@@ -1,13 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/src/widgets/container.dart';
 import 'package:flutter/src/widgets/framework.dart';
+import 'package:note_app/Data/data.dart';
+import 'package:note_app/Data/notemodals/notemodals.dart';
 import 'package:note_app/screens/screen_add_note.dart';
 
-class Screen_all_note extends StatelessWidget {
-  const Screen_all_note({super.key});
+class Screen_all_note extends StatefulWidget {
+  Screen_all_note({super.key});
+
+  @override
+  State<Screen_all_note> createState() => _Screen_all_noteState();
+}
+
+class _Screen_all_noteState extends State<Screen_all_note> {
+  final List<Notemodals> noteList = [];
 
   @override
   Widget build(BuildContext context) {
+    WidgetsBinding.instance!.addPostFrameCallback((_) async {
+      final _noteList = await NoteDB().getAllNotes();
+      noteList.clear();
+      setState(() {
+        noteList.addAll(_noteList.reversed);
+      });
+    });
     return Scaffold(
       appBar: AppBar(
         title: Text('Note App'),
@@ -19,12 +35,17 @@ class Screen_all_note extends StatelessWidget {
           crossAxisSpacing: 10,
           padding: EdgeInsets.all(20),
           children: List.generate(
-            10,
-            (index) => NoteItem(
-                id: index.toString(),
-                title: 'Lorem Ipsum Title $index',
-                content:
-                    'In publishing and graphic design, Lorem ipsum is a placeholder text commonly used to demonstrate the visual form of a document or a typeface without relying on meaningful content. Lorem ipsum may be used as a placeholder before final copy is available.'),
+            noteList.length,
+            (index) {
+              final _note = noteList[index];
+              if (_note.id == null) {
+                const SizedBox();
+              }
+              return NoteItem(
+                  id: _note.id!,
+                  title: _note.title ?? 'NoTitle',
+                  content: _note.content ?? 'No content');
+            },
           ),
         ),
       ),

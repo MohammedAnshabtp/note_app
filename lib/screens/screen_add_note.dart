@@ -41,9 +41,12 @@ class ScreenAddnote extends StatelessWidget {
   final _titleController = TextEditingController();
   final _contentController = TextEditingController();
 
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       appBar: AppBar(
         title: Text(type.name.toUpperCase()),
         actions: [
@@ -91,6 +94,11 @@ class ScreenAddnote extends StatelessWidget {
     );
 
     //server sending
-    NoteDB().createNote(_newNote);
+    final newNote = await NoteDB().createNote(_newNote);
+    if (newNote != null) {
+      Navigator.of(_scaffoldKey.currentContext!).pop();
+    } else {
+      print('Error while saving note');
+    }
   }
 }
