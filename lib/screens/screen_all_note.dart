@@ -13,42 +13,45 @@ class Screen_all_note extends StatefulWidget {
 }
 
 class _Screen_all_noteState extends State<Screen_all_note> {
-  final List<Notemodals> noteList = [];
-
   @override
   Widget build(BuildContext context) {
     WidgetsBinding.instance!.addPostFrameCallback((_) async {
-      final _noteList = await NoteDB().getAllNotes();
-      noteList.clear();
-      setState(() {
-        noteList.addAll(_noteList.reversed);
-      });
+      await NoteDB().getAllNotes();
     });
     return Scaffold(
       appBar: AppBar(
         title: Text('Note App'),
       ),
       body: SafeArea(
-        child: GridView.count(
-          crossAxisCount: 2,
-          mainAxisSpacing: 10,
-          crossAxisSpacing: 10,
-          padding: EdgeInsets.all(20),
-          children: List.generate(
-            noteList.length,
-            (index) {
-              final _note = noteList[index];
-              if (_note.id == null) {
-                const SizedBox();
-              }
-              return NoteItem(
-                  id: _note.id!,
-                  title: _note.title ?? 'NoTitle',
-                  content: _note.content ?? 'No content');
-            },
-          ),
-        ),
-      ),
+          child: ValueListenableBuilder(
+              valueListenable: NoteDB().noteListNotifier,
+              builder: (context, List<Notemodals> newNotes, _) {
+                if (newNotes.isEmpty) {
+                  return const Center(
+                    child: Text('Note list empty'),
+                  );
+                }
+                return GridView.count(
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 10,
+                  crossAxisSpacing: 10,
+                  padding: EdgeInsets.all(20),
+                  children: List.generate(
+                    newNotes.length,
+                    (index) {
+                      final _note =
+                          NoteDB.instance.noteListNotifier.value[index];
+                      if (_note.id == null) {
+                        const SizedBox();
+                      }
+                      return NoteItem(
+                          id: _note.id!,
+                          title: _note.title ?? 'NoTitle',
+                          content: _note.content ?? 'No content');
+                    },
+                  ),
+                );
+              })),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
@@ -111,7 +114,9 @@ class NoteItem extends StatelessWidget {
                   ),
                 ),
                 IconButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    NoteDB.instance.deleteNote(id);
+                  },
                   icon: Icon(Icons.delete, color: Colors.red),
                 )
               ],

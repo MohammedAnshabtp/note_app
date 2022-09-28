@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:note_app/Data/notemodals/notemodals.dart';
 import 'package:dio/dio.dart';
 import 'package:note_app/Data/url.dart';
-
 import 'get_all_notes/get_all_notes.dart';
 
 //functionality
@@ -18,6 +17,16 @@ abstract class ApiCalls {
 
 //Working
 class NoteDB extends ApiCalls {
+//== snigleton
+  NoteDB._internal();
+  static NoteDB instance = NoteDB._internal();
+
+  factory() {
+    return instance;
+  }
+
+//== end singleton
+
   //object creation
   final dio = Dio();
   final url = Url();
@@ -33,16 +42,29 @@ class NoteDB extends ApiCalls {
 
   @override
   Future<Notemodals?> createNote(Notemodals value) async {
-    final _result =
-        await dio.post(url.baseUrl + url.createNote, data: value.toJson());
+    final _result = await dio.post(
+      url.createNote,
+      data: value.toJson(),
+    );
     final _resultAsjson = jsonDecode(_result.data);
-    return Notemodals.fromJson(_result.data as Map<String, dynamic>);
+    final note = Notemodals.fromJson(_resultAsjson as Map<String, dynamic>);
+    noteListNotifier.value.insert(0, note);
+    noteListNotifier.notifyListeners();
+    return note;
   }
 
   @override
   Future<void> delete(String id) async {
-    // TODO: implement delete
-    throw UnimplementedError();
+    final _result = await dio.delete(url.deleteNote.replaceFirst('{id}', id));
+    if (_result.data == null) {
+      return;
+    }
+    final _index = noteListNotifier.value.indexWhere((note) => note.id == id);
+    if (_index == -1) {
+      return;
+    }
+    noteListNotifier.value.removeAt(_index);
+    noteListNotifier.notifyListeners();
   }
 
   @override
@@ -52,7 +74,7 @@ class NoteDB extends ApiCalls {
       final _resultAsJson = jsonDecode(_result.data);
       final getNotesResult = GetAllNotes.fromJson(_resultAsJson);
       noteListNotifier.value.clear();
-      noteListNotifier.value.addAll(getNotesResult.data);
+      noteListNotifier.value.addAll(getNotesResult.data.reversed);
       return getNotesResult.data;
     } else {
       noteListNotifier.value.clear();
@@ -62,7 +84,34 @@ class NoteDB extends ApiCalls {
 
   @override
   Future<Notemodals?> updateNote(Notemodals value) async {
-    // TODO: implement updateNote
-    throw UnimplementedError();
+    final _result = await dio.put(url.updateNote, data: value.toJson());
+    if (_result.data == null) {
+      return null;
+    }
+
+    //find index
+
+    final index =
+        noteListNotifier.value.indexWhere((note) => note.id == value.id);
+    if (index == -1) {
+      return null;
+    }
+    // remove from index
+    noteListNotifier.value.removeAt(index);
+
+    // add note in that index
+    noteListNotifier.value.insert(index, value);
+    noteListNotifier.notifyListeners();
+    return value;
   }
+
+  Notemodals? getNoteById(String id) {
+    try {
+      return noteListNotifier.value.firstWhere((note) => note.id == id);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  void deleteNote(String id) {}
 }
